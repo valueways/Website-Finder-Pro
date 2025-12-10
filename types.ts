@@ -9,6 +9,13 @@ export interface Business {
   category?: string;
   openStatus?: string;
   description?: string;
+  email?: string;
+  socialMedia?: {
+    instagram?: string;
+    facebook?: string;
+    twitter?: string;
+    linkedin?: string;
+  };
 }
 
 export type TabView = 'all' | 'no-website';

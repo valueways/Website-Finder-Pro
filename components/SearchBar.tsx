@@ -1,18 +1,34 @@
 import React, { useState } from 'react';
-import { Search, Loader2 } from 'lucide-react';
+import { Search, Loader2, Clock, X } from 'lucide-react';
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
   isLoading: boolean;
+  history?: string[];
+  onHistorySelect?: (query: string) => void;
+  onClearHistory?: () => void;
 }
 
-export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, isLoading }) => {
+export const SearchBar: React.FC<SearchBarProps> = ({ 
+  onSearch, 
+  isLoading, 
+  history = [], 
+  onHistorySelect,
+  onClearHistory
+}) => {
   const [input, setInput] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (input.trim()) {
       onSearch(input);
+    }
+  };
+
+  const handleHistoryClick = (item: string) => {
+    setInput(item);
+    if (onHistorySelect) {
+      onHistorySelect(item);
     }
   };
 
@@ -42,6 +58,36 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, isLoading }) => 
           {isLoading ? 'Searching...' : 'Search'}
         </button>
       </form>
+
+      {history.length > 0 && (
+        <div className="mt-4 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="flex items-center justify-between mb-2">
+             <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+               <Clock className="w-3 h-3" /> Recent Searches
+             </span>
+             {onClearHistory && (
+               <button 
+                 onClick={onClearHistory}
+                 className="text-xs text-slate-400 hover:text-red-500 transition-colors flex items-center gap-1"
+               >
+                 <X className="w-3 h-3" /> Clear
+               </button>
+             )}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {history.map((item, index) => (
+              <button
+                key={index}
+                onClick={() => handleHistoryClick(item)}
+                disabled={isLoading}
+                className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-slate-50 hover:text-blue-600 hover:border-blue-200 transition-all cursor-pointer shadow-sm active:scale-95 disabled:opacity-50"
+              >
+                {item}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

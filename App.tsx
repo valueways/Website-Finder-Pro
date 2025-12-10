@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { LayoutGrid, AlertCircle, CheckCircle2, Globe, ServerCrash } from 'lucide-react';
 import { Business, TabView, SearchState } from './types';
 import { findBusinesses } from './services/geminiService';
@@ -15,10 +15,42 @@ const App: React.FC = () => {
     hasSearched: false,
   });
   const [activeTab, setActiveTab] = useState<TabView>('all');
+  const [searchHistory, setSearchHistory] = useState<string[]>([]);
+
+  // Load history from local storage on mount
+  useEffect(() => {
+    const savedHistory = localStorage.getItem('website_finder_history');
+    if (savedHistory) {
+      try {
+        setSearchHistory(JSON.parse(savedHistory));
+      } catch (e) {
+        console.error("Failed to parse search history");
+      }
+    }
+  }, []);
+
+  const addToHistory = (query: string) => {
+    setSearchHistory(prev => {
+      const cleanQuery = query.trim();
+      if (!cleanQuery) return prev;
+      // Remove duplicates and keep top 8
+      const newHistory = [cleanQuery, ...prev.filter(item => item !== cleanQuery)].slice(0, 8);
+      localStorage.setItem('website_finder_history', JSON.stringify(newHistory));
+      return newHistory;
+    });
+  };
+
+  const clearHistory = () => {
+    setSearchHistory([]);
+    localStorage.removeItem('website_finder_history');
+  };
 
   const handleSearch = async (query: string) => {
     setSearchState({ query, isLoading: true, error: null, hasSearched: true });
     setBusinesses([]);
+    
+    // Add to history
+    addToHistory(query);
     
     try {
       const results = await findBusinesses(query);
@@ -79,7 +111,13 @@ const App: React.FC = () => {
           </p>
         </div>
         
-        <SearchBar onSearch={handleSearch} isLoading={searchState.isLoading} />
+        <SearchBar 
+          onSearch={handleSearch} 
+          isLoading={searchState.isLoading}
+          history={searchHistory}
+          onHistorySelect={handleSearch}
+          onClearHistory={clearHistory}
+        />
         
         {/* Error Display */}
         {searchState.error && (

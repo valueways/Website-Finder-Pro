@@ -13,6 +13,10 @@ export const findBusinesses = async (query: string): Promise<Business[]> => {
       I need a detailed list of at least 10-15 businesses if possible.
       For each business, I specifically need to know if they have a website URL.
       
+      CRITICAL: Also search for and extract their contact details if available in the listing or related info:
+      - Email address
+      - Social Media links (Instagram, Facebook, Twitter, LinkedIn)
+      
       Return the data strictly as a JSON array of objects. 
       Do NOT use Markdown code blocks. Just the raw JSON string.
       
@@ -25,6 +29,8 @@ export const findBusinesses = async (query: string): Promise<Business[]> => {
       - reviewCount (number or null)
       - category (string)
       - openStatus (string e.g. "Open Now", "Closed")
+      - email (string or null)
+      - socialMedia (object with keys: instagram, facebook, twitter, linkedin - values as string URLs or null)
       
       Make sure to accurately report the 'website' field. If the Google Maps data doesn't show a website, leave it empty or null.
     `;
@@ -34,8 +40,6 @@ export const findBusinesses = async (query: string): Promise<Business[]> => {
       contents: prompt,
       config: {
         tools: [{ googleMaps: {} }],
-        // Note: We cannot use responseSchema or responseMimeType when using googleMaps tool.
-        // We must rely on the prompt to format the output as JSON.
         temperature: 0.4,
       },
     });
@@ -64,6 +68,8 @@ export const findBusinesses = async (query: string): Promise<Business[]> => {
         reviewCount: item.reviewCount || 0,
         category: item.category || "General",
         openStatus: item.openStatus || undefined,
+        email: item.email || undefined,
+        socialMedia: item.socialMedia || {},
       }));
 
       return businesses;
@@ -84,4 +90,30 @@ Industry: ${business.category || 'General Business'}.
 Their phone number is ${business.phoneNumber || 'Not listed'}. 
 They currently do not have a website. 
 Create a modern, responsive, SEO-optimized website suitable for their business. Include sections for Home, About, Services, and Contact.`;
+};
+
+export const generateOutreachMessage = (business: Business): string => {
+  const socialProof = business.rating && business.rating > 4.0 
+    ? `I noticed you have a fantastic ${business.rating}-star rating on Google` 
+    : `I found your business listed in ${business.address.split(',')[1] || 'the area'}`;
+
+  const category = business.category || 'business';
+
+  return `Subject: Quick question about ${business.name}
+
+Hi ${business.name} team,
+
+${socialProof}, but I was surprised to see that you don't have a website listed.
+
+I help local ${category} businesses like yours establish a professional online presence to attract more customers. 
+
+In today's digital age, 97% of consumers search online for local services. Without a website, you might be missing out on valuable leads that are going to competitors.
+
+I'd love to build you a modern, mobile-friendly website that highlights your services and reviews.
+
+Are you open to a quick 5-minute chat this week to discuss how we can get ${business.name} online?
+
+Best regards,
+[Your Name]
+Web Developer`;
 };

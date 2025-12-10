@@ -8,16 +8,19 @@ interface ExportToolsProps {
 
 export const ExportTools: React.FC<ExportToolsProps> = ({ businesses }) => {
   const exportToCSV = () => {
-    const headers = ['Name', 'Category', 'Phone', 'Address', 'Rating', 'Reviews'];
+    const headers = ['Name', 'Category', 'Phone', 'Email', 'Address', 'Rating', 'Reviews', 'Instagram', 'Facebook'];
     const csvContent = [
       headers.join(','),
       ...businesses.map(b => [
         `"${b.name}"`,
         `"${b.category}"`,
         `"${b.phoneNumber || ''}"`,
+        `"${b.email || ''}"`,
         `"${b.address}"`,
         b.rating || '',
-        b.reviewCount || ''
+        b.reviewCount || '',
+        `"${b.socialMedia?.instagram || ''}"`,
+        `"${b.socialMedia?.facebook || ''}"`
       ].join(','))
     ].join('\n');
 
